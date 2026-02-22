@@ -1,0 +1,37 @@
+.x-axis path,
+.y-axis path,
+.x-axis line,
+.y-axis line {
+    stroke: #333;
+    shape-rendering: crispEdges;
+}
+
+.x-axis text,
+.y-axis text {
+    font-size: 12px;
+    font-family: Arial, sans-serif;
+}
+
+.axis-label {
+    font-size: 14px;
+    font-weight: bold;
+}
+/* Tick lines (the grid lines) */
+.tick line {
+    stroke: #7d7979; /* light grey */
+  }
+
+  button {
+    padding: 8px 16px;
+    margin-right: 10px;
+    border-radius: 2rem;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  background: linear-gradient(135deg, #d8b4f8, #c084fc);
+  color: black;
+
+  box-shadow: 0 4px 12px rgba(192, 132, 252, 0.3);
+}

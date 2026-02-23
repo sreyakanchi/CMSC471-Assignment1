@@ -69,7 +69,7 @@ const svg = d3.select('#vis')
     //part 2
     let currentData = []; // global variable
 
-    d3.json('data/data.json')
+    d3.csv('data/data.csv')
         //callback function
         .then(data => {
             console.log(data)

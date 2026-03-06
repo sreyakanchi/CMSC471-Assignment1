@@ -1,37 +1,350 @@
+/* ── CSS Variables ─────────────────────────────────────────────── */
+:root {
+  --bg:      #ffffff;
+  --surface: #f5f5f5;
+  --border:  #ddd;
+  --text:    #222;
+  --muted:   #666;
+  --accent:  #555;
+
+  --asian:  #7eb8f7;
+  --white:  #a8d8a0;
+  --hisp:   #f7a86e;
+  --black:  #e07090;
+  --aian:   #b9a0e8;
+}
+
+/* ── Reset ─────────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+  font-weight: 400;
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+
+/* ── Container ─────────────────────────────────────────────────── */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+/* ── Header ────────────────────────────────────────────────────── */
+header {
+  padding: 40px 0 28px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 32px;
+}
+
+.title-block h1 {
+  font-size: clamp(22px, 3vw, 36px);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.title-block h1 .accent {
+  color: var(--accent);
+}
+
+.title-block .subtitle {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--muted);
+  max-width: 540px;
+  line-height: 1.5;
+}
+
+.source {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: right;
+  white-space: nowrap;
+  line-height: 1.6;
+}
+
+/* ── Controls ──────────────────────────────────────────────────── */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+  align-items: flex-end;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.control-group label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.05em;
+}
+
+.btn-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Base button */
+button,
+.btn {
+  padding: 6px 14px;
+  border-radius: 2rem;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+button:hover,
+.btn:hover {
+  border-color: #999;
+  color: var(--text);
+}
+
+/* Active state — default */
+.btn.active {
+  background: var(--text);
+  border-color: var(--text);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Active state — per-race colors */
+.btn.race-asian.active { background: var(--asian); border-color: var(--asian); color: #fff; }
+.btn.race-white.active { background: var(--white); border-color: var(--white); color: #fff; }
+.btn.race-hisp.active  { background: var(--hisp);  border-color: var(--hisp);  color: #fff; }
+.btn.race-black.active { background: var(--black); border-color: var(--black); color: #fff; }
+.btn.race-aian.active  { background: var(--aian);  border-color: var(--aian);  color: #fff; }
+
+/* ── Charts ────────────────────────────────────────────────────── */
+.charts-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  margin-top: 0;
+}
+
+.chart-panel {
+  background: var(--bg);
+  padding: 32px 0 24px;
+}
+
+.chart-panel:last-child {
+  padding-left: 40px;
+}
+
+.chart-panel h2 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+
+.chart-panel .chart-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+/* D3 axis styling */
 .x-axis path,
 .y-axis path,
 .x-axis line,
 .y-axis line {
-    stroke: #333;
-    shape-rendering: crispEdges;
+  stroke: #333;
+  shape-rendering: crispEdges;
 }
 
 .x-axis text,
 .y-axis text {
-    font-size: 12px;
-    font-family: Arial, sans-serif;
+  font-size: 12px;
+  font-family: Arial, sans-serif;
+  fill: #333;
 }
 
 .axis-label {
-    font-size: 14px;
-    font-weight: bold;
+  font-size: 14px;
+  font-weight: bold;
+  fill: #333;
 }
-/* Tick lines (the grid lines) */
+
+/* Grid lines */
 .tick line {
-    stroke: #7d7979; /* light grey */
-  }
+  stroke: #7d7979;
+}
 
-  button {
-    padding: 8px 16px;
-    margin-right: 10px;
-    border-radius: 2rem;
-  border: none;
-  font-size: 1rem;
+/* ── Legend ────────────────────────────────────────────────────── */
+.legend {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Annotation Cards ──────────────────────────────────────────── */
+.annotation-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+}
+
+.annotation-card {
+  background: var(--surface);
+  padding: 24px 28px;
+}
+
+.annotation-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.annotation-card p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.annotation-card p strong {
+  color: var(--text);
   font-weight: 600;
-  cursor: pointer;
+}
 
-  background: linear-gradient(135deg, #d8b4f8, #c084fc);
-  color: black;
+/* ── Tooltip ───────────────────────────────────────────────────── */
+#tooltip {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 10px;
+  font-size: 12px;
+  line-height: 1.6;
+  max-width: 220px;
+  z-index: 1000;
+}
 
-  box-shadow: 0 4px 12px rgba(192, 132, 252, 0.3);
+.tt-header {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tt-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.tt-key { color: var(--muted); }
+
+.tt-val {
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ── Write-up ──────────────────────────────────────────────────── */
+.writeup {
+  padding: 48px 0;
+  max-width: 860px;
+}
+
+.writeup h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: var(--text);
+}
+
+.writeup section {
+  margin-bottom: 28px;
+}
+
+.writeup section h4 {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.writeup section p,
+.writeup section li {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #444;
+}
+
+.writeup section ul {
+  padding-left: 20px;
+  margin-top: 8px;
+}
+
+.writeup section li {
+  margin-bottom: 4px;
+}
+
+.writeup a {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.writeup a:hover {
+  color: var(--muted);
+}
+
+/* ── Responsive ────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .container { padding: 0 20px; }
+  .charts-wrapper,
+  .annotation-row { grid-template-columns: 1fr; }
+  .chart-panel:last-child { padding-left: 0; }
+  header { flex-direction: column; align-items: flex-start; }
+  .source { text-align: left; }
 }

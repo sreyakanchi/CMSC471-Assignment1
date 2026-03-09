@@ -248,3 +248,36 @@ select {
   font-weight: 600;
   color: var(--text);
 }
+
+.writeup-wrapper{
+  column-count: 2;
+  column-gap: 40px;
+}
+
+.writeup {
+  margin-bottom: 24px;
+  font-size: 14px;
+  color: var(--muted);
+  max-width: 540px;
+  line-height: 1.5;
+}
+
+.writeup2 {
+  margin-bottom: 24px;
+  font-size: 14px;
+  color: var(--muted);
+  max-width: 540px;
+  line-height: 1.5;
+}
+
+.writeup-title {
+  margin-top: 32px;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.writeup-line {
+  height: 1px;
+  background-color: #666;
+}

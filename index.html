@@ -13,7 +13,7 @@
         <!-- Header -->
         <header>
             <div class="title-block">
-                <h1>Mobility <span class="accent">Gaps</span></h1>
+                <h1>Mobility Gaps</h1>
                 <p class="subtitle">How does race and gender shape individual income rank and employment at age 27 — controlling for where parents started on the income ladder?</p>
             </div>
             <div class="source">
@@ -35,30 +35,27 @@
                     <button class="btn race-aian active" data-race="aian">AIAN</button>
                 </div>
             </div>
-            <div class="control-group">
-                <label>Gender</label>
-                <div class="btn-row" id="gender-btns">
-                    <button class="btn active" data-gender="female">Female</button>
-                    <button class="btn active" data-gender="male">Male</button>
-                </div>
-            </div>
-            <div class="control-group">
-                <label>Parent Income Percentile</label>
-                <div class="btn-row" id="pctile-btns">
-                    <button class="btn" data-p="p1">1st</button>
-                    <button class="btn" data-p="p25">25th</button>
-                    <button class="btn active" data-p="p50">50th</button>
-                    <button class="btn" data-p="p75">75th</button>
-                    <button class="btn" data-p="p100">100th</button>
-                </div>
-            </div>
+        <div class="control-group">
+            <label>Gender</label>
+            <select id="gender-select">
+                <option value="pooled" selected>Pooled</option>
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+            </select>
         </div>
-
+        <div class="control-group">
+            <label>Parent Income Percentile</label>
+            <!-- <p id="pct-value">50th</p>  -->
+            <!-- GET RID OF THE ABOVE LATER!!!  -->
+            <div id="pct-slider"></div>
+        </div>
+        </div>
+   
         <!-- Charts -->
         <div class="charts-wrapper">
             <div class="chart-panel">
                 <h2>Individual Income Rank (KIR)</h2>
-                <p class="chart-subtitle">Mean percentile rank in national income distribution at age 27 — own earnings only, not household.</p>
+                <p class="chart-subtitle">Mean percentile rank in national income distribution at age 27.</p>
                 <div id="chart-kir"></div>
             </div>
             <div class="chart-panel">
@@ -69,53 +66,7 @@
         </div>
 
         <!-- Legend -->
-        <div class="legend" id="legend"></div>
-
-        <!-- Findings -->
-           <!--
-        <div class="annotation-row">
-            <div class="annotation-card">
-                <div class="annotation-label">Finding 01 — Income Rank Hierarchy</div>
-                <p>At median parent income, <strong>Asian and White</strong> children rank ~10–15 percentiles above <strong>Black and AIAN</strong> children in individual income. This gap persists across every birth cohort from 1978–1992, suggesting structural rather than generational factors. <strong>Hispanic men</strong> notably outpace their female counterparts, inverting the Black pattern.</p>
-            </div>
-            <div class="annotation-card">
-                <div class="annotation-label">Finding 02 — The Black Gender Reversal</div>
-                <p>Across nearly every racial group, men have higher individual income ranks than women. <strong>Black women are the exception</strong> — they consistently outperform Black men on both income rank (~4 percentile points) and employment rate (~8–9 points). This inversion is unique to Black Americans and has been stable across all 15 birth cohorts in this data.</p>
-            </div>
-        </div> -->
-
-        <!-- Write-up 
-        <div class="writeup">
-            <h3>Visualization Write-up</h3>
-
-            <section>
-                <h4>Dataset &amp; Background</h4>
-                <p>This visualization uses national cohort-level data from Opportunity Insights (Raj Chetty et al.), covering children born 1978–1992. The dataset tracks economic outcomes at age 27 — individual income rank (KIR) and employment rate (EMP) — broken down by race, gender, and parent income percentile. It is part of a broader research program on intergenerational mobility in the United States.</p>
-            </section>
-
-            <section>
-                <h4>Design Rationale &amp; Interactions</h4>
-                <p>The two focal findings — a racial hierarchy in income rank, and a unique gender reversal among Black Americans — are best surfaced through side-by-side line charts over birth cohorts. Line charts reveal whether gaps are stable or changing over time, which is a key question in mobility research.</p>
-                <ul>
-                    <li><strong>Color encoding:</strong> Each race is assigned a distinct hue; solid lines = female, dashed = male. This separates two dimensions without requiring separate charts.</li>
-                    <li><strong>Details-on-demand tooltips (Category II):</strong> Hovering any data point reveals exact KIR and EMP values, the cohort year, race, gender, and parent income percentile context.</li>
-                    <li><strong>Dynamic filtering (Category I):</strong> Race, gender, and parent income percentile toggles filter which lines are rendered — implemented as brushing-style linked controls across both charts simultaneously.</li>
-                    <li><strong>Alternatives considered:</strong> A grouped bar chart per cohort was considered but produced visual clutter with 10 groups. A slope chart was considered for the gender gap, but the line chart better captures the time-stability of the finding.</li>
-                </ul>
-            </section>
-
-            <section>
-                <h4>Data Source</h4>
-                <p>Opportunity Insights — <em>Table 5: National Estimates by Cohort, Primary Outcomes</em>. Raj Chetty, Nathaniel Hendren, Maggie R. Jones, Sonya R. Porter. "Race and Economic Opportunity in the United States." Available at <a href="https://opportunityinsights.org" target="_blank">opportunityinsights.org</a>.</p>
-            </section>
-
-            <section>
-                <h4>Development Process</h4>
-                <p>Developed solo. Exploratory analysis of the dataset (~553 columns) was performed in Python/pandas to identify the most compelling variable subsets before implementing in D3. Approximately 6 person-hours spent: 1.5hr on data wrangling, 1hr on chart architecture, 2.5hr on styling and tooltip interactions, 1hr on write-up and layout. The most time-consuming aspect was managing the dual-encoding of race (color) and gender (line style) while keeping tooltips precise across overlapping paths.</p>
-            </section>
-
-        
-        </div>  -->
+        <!-- <div class="legend" id="legend"></div> -->
 
     </div> 
 
@@ -124,6 +75,7 @@
 
     <!-- Load D3.js -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/d3-simple-slider"></script>
     <script src="js/script.js"></script>
 </body>
 </html>

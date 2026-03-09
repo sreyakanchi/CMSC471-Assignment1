@@ -123,6 +123,12 @@ const RACE_LABELS = {
     aian:  'AIAN'
 };
 
+const GENDER_LABELS = {
+    pooled: 'Pooled',
+    female: 'Female',
+    male: 'Male'
+};
+
 const PCTILE_LABELS = {
     p1: '1st', p25: '25th', p50: '50th', p75: '75th', p100: '100th'
 };
@@ -131,8 +137,10 @@ const PCTILE_LABELS = {
 // Global state variables
 let currentData = [];   // global variable — flat array of {cohort, race, gender, kir, emp}
 let activeRaces   = new Set(['asian', 'white', 'hisp', 'black', 'aian']);
-let activeGenders = new Set(['female', 'male']);
-let activeP       = 'p50';
+let activeGender = 'pooled';
+let pctOptions = ['p1', 'p25', 'p50', 'p75', 'p100'];
+let pctIndex = 2;
+let activeP = pctOptions[pctIndex];
 
 
 // Load data
@@ -141,14 +149,13 @@ d3.csv('data/data.csv', d => {
     const cohort = +d.cohort;
     const rows = [];
     ['asian', 'white', 'hisp', 'black', 'aian'].forEach(race => {
-        ['female', 'male'].forEach(gender => {
-            ['p1', 'p25', 'p50', 'p75', 'p100'].forEach(p => {
+        ['pooled', 'female', 'male'].forEach(gender => {            ['p1', 'p25', 'p50', 'p75', 'p100'].forEach(p => {
                 rows.push({
                     cohort: cohort,
                     race:   race,
                     gender: gender,
                     p:      p,
-                    kir:    +d[`kfr_${race}_${gender}_${p}`],
+                    kir:    +d[`kir_${race}_${gender}_${p}`],
                     emp:    +d[`emp_${race}_${gender}_${p}`]
                 });
             });
@@ -160,14 +167,51 @@ d3.csv('data/data.csv', d => {
     // each entry here is an array of objects — flatten one level
     currentData = data.flat();
     console.log(currentData);
+    setupSelector();
     updateVis();
 });
+
+function setupSelector() {
+    d3.select('#pct-value').text(PCTILE_LABELS[activeP]);
+
+    const slider = d3.sliderHorizontal()
+        .min(0)
+        .max(pctOptions.length - 1)
+        .step(1)
+        .width(220)
+        .default(pctIndex)
+        .displayValue(false)
+        .tickValues(d3.range(pctOptions.length))
+        .tickFormat(d => PCTILE_LABELS[pctOptions[d]])
+        .on('onchange', val => {
+            pctIndex = +val;
+            activeP = pctOptions[pctIndex];
+            d3.select('#pct-value').text(PCTILE_LABELS[activeP]);
+            updateVis();
+        });
+
+    d3.select('#pct-slider')
+        .html('')
+        .append('svg')
+        .attr('width', 280)
+        .attr('height', 70)
+        .append('g')
+        .attr('transform', 'translate(20,20)')
+        .call(slider);
+
+    d3.select('#gender-select')
+        .property('value', activeGender)
+        .on('change', function () {
+            activeGender = d3.select(this).property('value');
+            updateVis();
+        });
+}
 
 function updateVis() {
     // Filter down to the active selection
     const filtered = currentData.filter(d =>
         activeRaces.has(d.race) &&
-        activeGenders.has(d.gender) &&
+        d.gender === activeGender &&
         d.p === activeP
     );
 
@@ -182,29 +226,17 @@ function updateVis() {
         .y(d => yScaleEmp(d.emp))
         .curve(d3.curveMonotoneX);
 
-    // Build one series per race+gender combination
-    const seriesKeys = [];
-    activeRaces.forEach(race => {
-        activeGenders.forEach(gender => {
-            seriesKeys.push({ race, gender });
-        });
-    });
-
-    const seriesData = seriesKeys.map(({ race, gender }) => ({
+    const seriesData = Array.from(activeRaces).map(race => ({
         race,
-        gender,
-        points: filtered.filter(d => d.race === race && d.gender === gender)
-                         .sort((a, b) => a.cohort - b.cohort)
+        gender: activeGender,
+        points: filtered
+            .filter(d => d.race === race)
+            .sort((a, b) => a.cohort - b.cohort)
     }));
 
 
-    // ── KIR chart — lines ────────────────────────────────────────
-    // Now, the class 'line-kir' is important.
-    // To make sure we can manipulate lines, we need to select all .line-kir elements.
-    // And thus, all paths created should have this class name (see below).
     svgKir.selectAll('.line-kir')
-        // using the global variable
-        .data(seriesData, d => d.race + '-' + d.gender)
+        .data(seriesData, d => d.race)
         .join(
             function(enter) {
                 return enter
@@ -213,16 +245,14 @@ function updateVis() {
                     .attr('fill', 'none')
                     .attr('stroke', d => RACE_COLORS[d.race])
                     .attr('stroke-width', 1.8)
-                    .attr('stroke-dasharray', d => d.gender === 'male' ? '5,3' : null)
                     .attr('opacity', 0.85)
                     .attr('d', d => kirLine(d.points));
             },
             function(update) {
                 return update
-                    .transition()              // ✅ transition goes HERE
+                    .transition()
                     .duration(800)
                     .attr('stroke', d => RACE_COLORS[d.race])
-                    .attr('stroke-dasharray', d => d.gender === 'male' ? '5,3' : null)
                     .attr('d', d => kirLine(d.points));
             },
             function(exit) {
@@ -231,10 +261,9 @@ function updateVis() {
         );
 
     // ── KIR chart — dots ─────────────────────────────────────────
-    // Now, the class 'point-kir' is important.
     svgKir.selectAll('.point-kir')
         // using the global variable
-        .data(filtered, d => d.race + '-' + d.gender + '-' + d.cohort)
+        .data(filtered, d => d.race + '-' + d.cohort)
         .join(
             function(enter) {
                 return enter
@@ -244,13 +273,11 @@ function updateVis() {
                     .attr('cy', d => yScaleKir(d.kir))
                     .attr('r', 4)
                     .attr('fill', d => RACE_COLORS[d.race])
-                    .attr('stroke', '#0e0e10')
-                    .attr('stroke-width', 1.5)
                     .attr('cursor', 'pointer');
             },
             function(update) {
                 return update
-                    .transition()              // ✅ transition goes HERE
+                    .transition()              
                     .duration(800)
                     .attr('cx', d => xScale(d.cohort))
                     .attr('cy', d => yScaleKir(d.kir));
@@ -271,7 +298,7 @@ function updateVis() {
 
     // ── EMP chart — lines ────────────────────────────────────────
     svgEmp.selectAll('.line-emp')
-        .data(seriesData, d => d.race + '-' + d.gender)
+        .data(seriesData, d => d.race)
         .join(
             function(enter) {
                 return enter
@@ -280,16 +307,14 @@ function updateVis() {
                     .attr('fill', 'none')
                     .attr('stroke', d => RACE_COLORS[d.race])
                     .attr('stroke-width', 1.8)
-                    .attr('stroke-dasharray', d => d.gender === 'male' ? '5,3' : null)
                     .attr('opacity', 0.85)
                     .attr('d', d => empLine(d.points));
             },
             function(update) {
                 return update
-                    .transition()              // ✅ transition goes HERE
+                    .transition()
                     .duration(800)
                     .attr('stroke', d => RACE_COLORS[d.race])
-                    .attr('stroke-dasharray', d => d.gender === 'male' ? '5,3' : null)
                     .attr('d', d => empLine(d.points));
             },
             function(exit) {
@@ -299,7 +324,7 @@ function updateVis() {
 
     // ── EMP chart — dots ─────────────────────────────────────────
     svgEmp.selectAll('.point-emp')
-        .data(filtered, d => d.race + '-' + d.gender + '-' + d.cohort)
+        .data(filtered, d => d.race + '-' + d.cohort)
         .join(
             function(enter) {
                 return enter
@@ -309,13 +334,11 @@ function updateVis() {
                     .attr('cy', d => yScaleEmp(d.emp))
                     .attr('r', 4)
                     .attr('fill', d => RACE_COLORS[d.race])
-                    .attr('stroke', '#0e0e10')
-                    .attr('stroke-width', 1.5)
                     .attr('cursor', 'pointer');
             },
             function(update) {
                 return update
-                    .transition()              // ✅ transition goes HERE
+                    .transition()              
                     .duration(800)
                     .attr('cx', d => xScale(d.cohort))
                     .attr('cy', d => yScaleEmp(d.emp));
@@ -333,50 +356,8 @@ function updateVis() {
             hideTooltip();
         });
 
-    updateLegend();
 }
 
-
-function updateLegend() {
-    // make it easier for debugging
-    console.log('update legend');
-
-    const leg = document.getElementById('legend');
-    leg.innerHTML = '';
-
-    activeRaces.forEach(race => {
-        activeGenders.forEach(gender => {
-            const item = document.createElement('div');
-            item.className = 'legend-item';
-
-            const dot = document.createElement('div');
-            dot.className = 'legend-dot';
-            dot.style.background = RACE_COLORS[race];
-            if (gender === 'male') {
-                dot.style.background = 'transparent';
-                dot.style.border = `2px dashed ${RACE_COLORS[race]}`;
-            }
-            item.appendChild(dot);
-
-            const label = document.createElement('span');
-            label.textContent = `${RACE_LABELS[race]} ${gender.charAt(0).toUpperCase() + gender.slice(1)}`;
-            item.appendChild(label);
-            leg.appendChild(item);
-        });
-    });
-
-    // Solid / dashed key
-    const keyItems = [
-        { svg: `<svg width="24" height="12"><line x1="0" y1="6" x2="24" y2="6" stroke="#7a7870" stroke-width="1.8"/></svg>`, label: 'Female (solid)' },
-        { svg: `<svg width="24" height="12"><line x1="0" y1="6" x2="24" y2="6" stroke="#7a7870" stroke-width="1.8" stroke-dasharray="5,3"/></svg>`, label: 'Male (dashed)' }
-    ];
-    keyItems.forEach(k => {
-        const item = document.createElement('div');
-        item.className = 'legend-item';
-        item.innerHTML = k.svg + `<span>${k.label}</span>`;
-        leg.appendChild(item);
-    });
-}
 
 
 function toggleRace(race, btn) {
@@ -395,21 +376,6 @@ function toggleRace(race, btn) {
     updateVis();
 }
 
-function toggleGender(gender, btn) {
-    // make it easier for debugging
-    console.log('toggle gender', gender);
-    if (activeGenders.has(gender)) {
-        if (activeGenders.size > 1) { // always keep at least one active
-            activeGenders.delete(gender);
-            btn.classList.remove('active');
-        }
-    } else {
-        activeGenders.add(gender);
-        btn.classList.add('active');
-    }
-    // call to update visualization
-    updateVis();
-}
 
 function selectPercentile(p, btn) {
     // make it easier for debugging
@@ -425,11 +391,6 @@ function selectPercentile(p, btn) {
 d3.selectAll('#race-btns .btn')
     .on('click', function() { toggleRace(this.dataset.race, this); });
 
-d3.selectAll('#gender-btns .btn')
-    .on('click', function() { toggleGender(this.dataset.gender, this); });
-
-d3.selectAll('#pctile-btns .btn')
-    .on('click', function() { selectPercentile(this.dataset.p, this); });
 
 
 // Tooltip helpers
@@ -438,7 +399,7 @@ function showTooltip(event, d) {
     d3.select('#tooltip')
         .style('opacity', 1)
         .html(`
-            <div class="tt-header">${RACE_LABELS[d.race]} · ${d.gender === 'female' ? 'Female' : 'Male'} · ${d.cohort}</div>
+            <div class="tt-header">${RACE_LABELS[d.race]} · ${GENDER_LABELS[d.gender]} · ${d.cohort}</div>
             <div class="tt-row"><span class="tt-key">Parent income</span><span class="tt-val">${PCTILE_LABELS[activeP]} pctile</span></div>
             <div class="tt-row"><span class="tt-key">Indiv. income rank</span><span class="tt-val">${(d.kir * 100).toFixed(1)}th pctile</span></div>
             <div class="tt-row"><span class="tt-key">Employment rate</span><span class="tt-val">${(d.emp * 100).toFixed(1)}%</span></div>

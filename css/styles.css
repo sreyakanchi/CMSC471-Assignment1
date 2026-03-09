@@ -280,4 +280,5 @@ select {
 .writeup-line {
   height: 1px;
   background-color: #666;
+  margin-bottom: 24px;
 }

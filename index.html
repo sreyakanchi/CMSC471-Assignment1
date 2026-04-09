@@ -1,25 +1,250 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assignment 1: Interactive Visualization</title>
-    <link rel="stylesheet" href="css/styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gentrification & Racial Displacement — White Hat Visualization</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3-simple-slider"></script>
+
+  <script src="js/script.js"></script>
 </head>
 <body>
-    <div class="container"> <!-- Centers content and sets max width -->
-        <h1>Assignment 1: Interactive Visualization</h1>
-        <div class="controls">
-            <button id="addPoint">Add Point</button>
-            <button id="removePoint">Remove Point</button>
-            <button id="updatePoints">Update Points</button>
-            </div>
-            <div id="vis"></div> <!--  Will hold our visualization (SVG) -->
-        <!-- Load D3.js -->
+
+  <header class="header">
+    <div class="header-inner">
+      <div class="badge">White hat visualization</div>
+      <h1>Gentrification correlates with significant Black population decline and white population growth</h1>
+      <p class="header-sub">
+        An honest look at racial demographic shifts across gentrified and non-gentrified census tracts
+        in five U.S. cities, comparing 2000 Census data to 2013–2017 American Community Survey estimates.
+        All data transformations and methodology are disclosed below.
+      </p>
     </div>
-    
-    <!-- Load D3.js -->
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="js/script.js"></script>
+  </header>
+
+  <main class="main">
+
+    <!-- Stat row -->
+    <div class="stat-row">
+      <div class="stat-card">
+        <p class="stat-label">Total tracts analyzed</p>
+        <p class="stat-value">2,799</p>
+        <p class="stat-context">Across 5 U.S. cities</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Gentrified tracts</p>
+        <p class="stat-value">289</p>
+        <p class="stat-context">10.3% of all tracts</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Eligible, not gentrified</p>
+        <p class="stat-value">593</p>
+        <p class="stat-context">67% of eligible tracts resisted</p>
+      </div>
+    </div>
+
+    <!-- Chart 1: Racial composition change -->
+    <p class="section-label">Racial composition change, 2000–2017</p>
+    <div class="chart-card">
+      <p class="chart-title">Median change in racial group share of population (percentage points)</p>
+      <p class="chart-desc">
+        Gentrified tracts show dramatically different demographic shifts compared to non-gentrified tracts —
+        particularly a sharp decline in Black residents and an increase in white residents.
+        Values are medians across all tracts in each category; all four major racial/ethnic groups are shown.
+      </p>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot" style="background:#378ADD;"></span>Gentrified tracts (n = 289)</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#B4B2A9;"></span>Non-gentrified tracts (n = 2,510)</div>
+      </div>
+      <div class="chart-wrap" style="height: 300px;">
+        <canvas id="raceChart"></canvas>
+      </div>
+      <div class="annotation">
+        In gentrified tracts, the Black population share fell by a median of <strong>11.2 percentage points</strong> —
+        nearly 9× the decline seen in non-gentrified tracts (−1.2 pp). The white share rose by <strong>+8.5 pp</strong>
+        in gentrified areas versus a slight decline (−1.7 pp) elsewhere. These figures are medians;
+        individual tract displacement can be far more severe.
+      </div>
+    </div>
+
+    <!-- Charts 2 & 3: Income + Home values -->
+    <p class="section-label">Economic change, 2000–2017</p>
+    <div class="chart-row">
+      <div class="chart-card">
+        <p class="chart-title">Median household income</p>
+        <p class="chart-desc">Gentrified tracts started with lower incomes in 2000 and still hadn't closed the gap by 2017, even as home values surged past non-gentrified tracts.</p>
+        <div class="legend">
+          <div class="legend-item"><span class="legend-dot" style="background:#378ADD;"></span>Gentrified</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#B4B2A9;"></span>Not gentrified</div>
+        </div>
+        <div class="chart-wrap" style="height: 210px;">
+          <canvas id="incomeChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <p class="chart-title">Median home value</p>
+        <p class="chart-desc">Gentrified tracts started at roughly half the home value of non-gentrified tracts in 2000, then surged — a 58% increase versus 36% elsewhere.</p>
+        <div class="legend">
+          <div class="legend-item"><span class="legend-dot" style="background:#378ADD;"></span>Gentrified</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#B4B2A9;"></span>Not gentrified</div>
+        </div>
+        <div class="chart-wrap" style="height: 210px;">
+          <canvas id="homeChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart 4: Education -->
+    <div class="chart-card">
+      <p class="chart-title">Educational attainment change (median percentage points, adults 25+)</p>
+      <p class="chart-desc">
+        College attainment rose nearly 3× faster in gentrified tracts (+21.4 pp vs. +7.6 pp),
+        suggesting an influx of higher-educated newcomers rather than incumbent residents gaining degrees over time.
+        This is one of the two criteria used to classify a tract as gentrified — disclosed in the methodology below.
+      </p>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot" style="background:#378ADD;"></span>Gentrified (n = 289)</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#B4B2A9;"></span>Non-gentrified (n = 2,510)</div>
+      </div>
+      <div class="chart-wrap" style="height: 180px;">
+        <canvas id="edChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Write-up -->
+    <p class="section-label" style="margin-top: 2rem;">Visualization write-up</p>
+    <div class="writeup-card">
+      <h2 class="writeup-heading">Dataset</h2>
+      <p>
+        This visualization draws on the Urban Displacement Project's gentrification dataset, covering 2,799
+        census tracts across five U.S. cities: New York City, Baltimore, Washington D.C., Atlanta, and Oakland.
+        Each row represents one census tract — a small, relatively stable geographic subdivision of a county
+        used by the U.S. Census Bureau, typically housing 1,200–8,000 people. The dataset compares
+        2000 Census figures to 2013–2017 American Community Survey 5-year estimates.
+      </p>
+
+      <h2 class="writeup-heading">Data transformations</h2>
+      <p>
+        Two key transformations were applied. First, racial group counts were converted to percentage shares
+        of each tract's total population for both years, and a change score (2017 share minus 2000 share, in
+        percentage points) was computed for each group. This allows fair comparison across tracts of different
+        sizes. Second, medians — rather than means — were used as the summary statistic across tracts. Median
+        is more robust to outlier tracts with extreme demographic shifts, which is important in a dataset where
+        individual tracts can swing dramatically.
+      </p>
+
+      <h2 class="writeup-heading">Design choices</h2>
+      <p>
+        The primary chart uses a grouped bar chart to show racial composition change side-by-side for gentrified
+        and non-gentrified tracts. A grouped bar was chosen over a stacked bar because the goal is comparison
+        between groups (gentrified vs. not), not part-to-whole composition. The y-axis includes zero and spans
+        both positive and negative values, so the direction of change is immediately visible without distortion.
+        Blue encodes gentrified tracts throughout all four charts for consistency; gray encodes non-gentrified
+        tracts. These colors were chosen to be perceptually distinct without implying a value judgment (e.g.,
+        red/green, which carry good/bad connotations).
+      </p>
+      <p>
+        The economic charts (income and home value) deliberately start at $0 on the y-axis to avoid truncation
+        bias. The education chart uses a horizontal comparison of just two bars — a simple encoding appropriate
+        for a simple two-group comparison.
+      </p>
+      <p>
+        All chart titles are descriptive and neutral. The annotation beneath the main chart explicitly states
+        the key finding in plain language and includes the caveat that medians may understate individual tract
+        displacement. The methodology box discloses how "gentrified" is operationally defined, including that
+        educational attainment change is one of the two classification criteria — which is directly relevant
+        to interpreting the education chart.
+      </p>
+
+      <h2 class="writeup-heading">Ensuring clarity and accuracy</h2>
+      <p>
+        Every axis is labeled with units. Legends identify which color represents which group and include
+        sample sizes (n = 289, n = 2,510) so readers can assess the relative weight of each category.
+        The header sub-title discloses the time period and data sources. All four racial/ethnic groups present
+        in the data are shown — no group is omitted to strengthen a narrative. The methodology and limitations
+        sections below the charts disclose the definition of gentrification used, the geographic scope of the
+        dataset, and the measurement limitations of comparing Census 2000 to ACS 2013–2017 estimates.
+      </p>
+    </div>
+
+    <!-- Methodology -->
+    <p class="section-label" style="margin-top: 2rem;">Methodology & data transparency</p>
+    <div class="methodology">
+      <p class="methodology-title">How "gentrified" is defined in this dataset</p>
+      <p>
+        A census tract is classified as <em>eligible for gentrification</em> if its median household income
+        was below the 40th percentile of its metro area in 2000 and its median home value was in the bottom
+        40th percentile. Of eligible tracts, a tract is classified as <em>gentrified</em> if it experienced both:
+      </p>
+      <ul class="step-list">
+        <li data-n="1">Above-median home value growth between 2000 and 2017 (top half of eligible tracts by % change)</li>
+        <li data-n="2">Above 66th percentile increase in the share of adults with a bachelor's degree or higher</li>
+      </ul>
+      <p style="margin-top: 10px;">
+        This definition follows the Urban Displacement Project framework. Alternative definitions exist in
+        gentrification literature — results may differ. Tracts flagged as low-population were excluded.
+      </p>
+    </div>
+
+    <div class="methodology">
+      <p class="methodology-title">Limitations & potential bias</p>
+      <p>
+        Coverage is limited to five cities; NYC alone makes up 77% of tracts, so findings should not be
+        generalized broadly. Tract-level composition change does not directly measure individual displacement —
+        a rising white share could reflect departures, arrivals, or both. Racial figures reflect
+        self-identification and minor measurement differences may exist between Census 2000 and ACS 2013–2017.
+      </p>
+    </div>
+
+    <!-- Source footer -->
+    <div class="source-footer">
+      <strong>Data source:</strong> Urban Displacement Project gentrification dataset &nbsp;·&nbsp;
+      <strong>Geography:</strong> U.S. Census Bureau census tracts &nbsp;·&nbsp;
+      <strong>Cities:</strong> New York City, Baltimore, Washington D.C., Atlanta, Oakland &nbsp;·&nbsp;
+      <strong>Time period:</strong> Census 2000 vs. ACS 5-year estimates 2013–2017 &nbsp;·&nbsp;
+      Values shown are medians across census tracts within each category.
+    </div>
+
+  </main>
+
+  <header class="header bh-header">
+    <div class="header-inner">
+      <div class="badge bh-badge">Black hat visualization</div>
+      <h1>Placeholder title — misleading narrative goes here</h1>
+      <p class="header-sub">
+        A placeholder for the black hat visualization. Charts and write-up will appear below.
+      </p>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- Placeholder chart area -->
+    <p class="section-label">Visualization placeholder</p>
+    <div class="chart-card bh-placeholder-card">
+      <p class="chart-title">Chart will go here</p>
+      <p class="chart-desc">The black hat chart and supporting views will be added in this section.</p>
+      <div class="bh-placeholder-box"></div>
+    </div>
+
+    <!-- Write-up placeholder -->
+    <p class="section-label" style="margin-top: 2rem;">Visualization write-up</p>
+    <div class="writeup-card">
+      <h2 class="writeup-heading">Dataset</h2>
+      <p>Write-up content will go here.</p>
+      <h2 class="writeup-heading">Manipulative techniques used</h2>
+      <p>Explanation of black hat techniques will go here.</p>
+    </div>
+
+  </main>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

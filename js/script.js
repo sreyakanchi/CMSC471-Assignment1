@@ -1,162 +1,295 @@
+// ── Constants ────────────────────────────────────────────────────────────────
 
+const BLUE = '#378ADD';
+const GRAY = '#B4B2A9';
+const GRID_COLOR = 'rgba(136,135,128,0.15)';
+const TICK_COLOR = '#888780';
+const TICK_FONT = { size: 11, family: 'DM Sans' };
 
-const margin = {top: 40, right: 40, bottom: 40, left: 60};
-const width = 600 - margin.left - margin.right;
-const height = 400 - margin.top - margin.bottom;
-// The margin code above
+// ── Shared axis helpers ───────────────────────────────────────────────────────
 
-
-// // Create SVG
-const svg = d3.select('#vis')
-    .append('svg')
-    .attr('width', width + margin.left + margin.right)
-    .attr('height', height + margin.top + margin.bottom)
-    .append('g')
-    .attr('transform', `translate(${margin.left},${margin.top})`);
-
-    // Specify margin
-  // [copied from lab 2]
- 
-  // Create svg and g
-  // [copied from lab 2]
-
-  // Create scales
-  const xScale = d3.scaleLinear() // a numeric / quantative scale
-  .domain([0, 100]) // prefined data range
-  .range([0, width]);
-
-    const yScale = d3.scaleLinear()
-    .domain([0, 100]) // prefined data range
-    .range([height, 0]);
-
-// Add axes
-    const xAxis = d3.axisBottom(xScale);
-
-    svg.append('g')
-   .attr('transform', `translate(0,${height})`)
-   .call(xAxis);
-
-
-   const yAxis = d3.axisLeft(yScale)
-   yAxis.ticks([5]);
-
-    svg.append('g')
-    .attr('class', 'y-axis')
-    .call(yAxis);
-
-  // [copied from lab 2]
-    // Part 2:
-
-    
-    
-
-    // svg.append('text')
-    // .attr('class', 'axis-label')
-    // .attr('x', width / 2)
-    // .attr('y', height + margin.bottom - 10)
-    // .style('text-anchor', 'middle')
-    // .text('fruit');
-
-    // svg.append('text')
-    // .attr('class', 'axis-label')
-    // .attr('transform', 'rotate(-90)')
-    // .attr('x', -height / 2)
-    // .attr('y', -margin.left + 15)
-    // .style('text-anchor', 'middle')
-    // .text('count');
-
-
-    //part 2
-    let currentData = []; // global variable
-
-    d3.csv('data/data.csv')
-        //callback function
-        .then(data => {
-            console.log(data)
-            currentData = data.points
-            updateVis()
-        })
-        .catch(error => console.error('Error loading data:', error))
-    
-    function updateVis(){
-         // Now, the class point is important. 
-        // To make sure we can manipulate circles, we need to select all .point elements. 
-        // And thus, all circles created should have this class name (see below).
-        svg.selectAll('.point')
-        // using the global variable
-        .data(currentData)
-        .join(
-                function(enter){ 
-                    return enter
-                    .append('circle')
-                    .attr('cx', d => xScale(d.x))
-                    .attr('cy', d => yScale(d.y))
-                    .attr('r', 5)
-                    .style('fill', d => d.color)
-                    // Important. All new circles should be associated with the point class
-                    .attr('class', 'point')},
-                function(update){
-                    return  update
-                    .transition()              // ✅ transition goes HERE
-                    .duration(800)
-                    .attr('cx', d => xScale(d.x))
-                    .attr('cy', d => yScale(d.y))
-                 }, 
-                function(exit){
-                    return  exit.remove()
-                }
-   )}
-
-   function addRandomPoint() {
-    // make it easier for debugging
-    console.log('add point')
-    const newPoint = {
-        x: (Math.random() * 100) < 0 ? (Math.random() * -100): (Math.random() * 100),
-        y: (Math.random()) * 100,// finish the code, generate a number between 0 - 100
-        color: 'red'
+function xAxis() {
+    return {
+        ticks: { font: TICK_FONT, color: TICK_COLOR },
+        grid: { display: false }
     };
-    currentData.push(newPoint);
-    // call to update visualization
-    updateVis();
 }
 
-function removeRandomPoint() {
-    // make it easier for debugging
-    console.log('remove point')
-    currentData.pop();
-    // call to update visualization
-    updateVis();
+function ppYAxis(titleText) {
+    return {
+        title: { display: true, text: titleText, font: { size: 11 }, color: TICK_COLOR },
+        ticks: {
+            callback: v => (v > 0 ? '+' : '') + v + ' pp',
+            font: TICK_FONT,
+            color: TICK_COLOR
+        },
+        grid: { color: GRID_COLOR }
+    };
 }
 
-
-function updateRandomPoints() {
-    
-    // make it easier for debugging
-    console.log('update points')
-    currentData = currentData.map(d => ({
-        id: currentData.length + 1,
-        x: Math.max(0, Math.min(100,
-            d.x + (Math.random() - 0.5) * 10,)), //moves between -5 and 5, prevents from going above 100 or below 0
-        y: d.y + (Math.random() - 0.5) * 10,// finish the code, move d.y a bit
-    }));
-
-
-
-    // call to update visualization
-    updateVis();
+function dollarYAxis() {
+    return {
+        min: 0,
+        ticks: {
+            callback: v => '$' + (v / 1000).toFixed(0) + 'k',
+            font: TICK_FONT,
+            color: TICK_COLOR
+        },
+        grid: { color: GRID_COLOR }
+    };
 }
 
-d3.select('#addPoint')
-    .on('click', addRandomPoint);
+function ppTooltip(ctx) {
+    const v = ctx.raw;
+    return ctx.dataset.label + ': ' + (v > 0 ? '+' : '') + v.toFixed(1) + ' pp';
+}
 
-d3.select('#removePoint')
-    .on('click', removeRandomPoint);
+// ── Data helpers ─────────────────────────────────────────────────────────────
 
-d3.select('#updatePoints')
-    .on('click', updateRandomPoints);
-   
+// Parse a CSV string into an array of row objects keyed by header
+function parseCSV(text) {
+    const lines = text.trim().split('\n');
+    const headers = lines[0].split(',').map(h => h.trim());
+    return lines.slice(1).map(line => {
+        const vals = line.split(',');
+        const row = {};
+        headers.forEach((h, i) => {
+            const v = vals[i] !== undefined ? vals[i].trim() : '';
+            row[h] = v === '' ? null : isNaN(v) ? v : +v;
+        });
+        return row;
+    });
+}
 
-    
+// Compute the median of an array of numbers (nulls excluded)
+function median(arr) {
+    const clean = arr.filter(v => v !== null && !isNaN(v)).sort((a, b) => a - b);
+    if (clean.length === 0) return null;
+    const mid = Math.floor(clean.length / 2);
+    return clean.length % 2 !== 0 ? clean[mid] : (clean[mid - 1] + clean[mid]) / 2;
+}
 
+// Summarise rows into median values for each field we need
+function summarise(rows) {
+    return {
+        pct_white_alone_change:          median(rows.map(r => r.pct_white_alone_change)),
+        pct_black_alone_change:          median(rows.map(r => r.pct_black_alone_change)),
+        pct_hispanic_change:             median(rows.map(r => r.pct_hispanic_or_latino_change)),
+        pct_asian_change:                median(rows.map(r => r.pct_asian_alone_change)),
+        median_income_00:                median(rows.map(r => r.median_income_00)),
+        median_income_17:                median(rows.map(r => r.median_income_17)),
+        median_home_value_00:            median(rows.map(r => r.median_home_value_00)),
+        median_home_value_17:            median(rows.map(r => r.median_home_value_17)),
+        educational_attainment_change:   median(rows.map(r => r.educational_attainment_change)),
+        tract_count:                     rows.length
+    };
+}
 
-    
+// ── Chart functions ───────────────────────────────────────────────────────────
+
+function createRaceChart(data) {
+    new Chart(document.getElementById('raceChart'), {
+        type: 'bar',
+        data: {
+            labels: ['White alone', 'Black alone', 'Hispanic / Latino', 'Asian alone'],
+            datasets: [
+                {
+                    label: 'Gentrified tracts',
+                    data: [
+                        data.gentrified.pct_white_alone_change,
+                        data.gentrified.pct_black_alone_change,
+                        data.gentrified.pct_hispanic_change,
+                        data.gentrified.pct_asian_change
+                    ],
+                    backgroundColor: BLUE,
+                    borderRadius: 4,
+                    barPercentage: 0.7
+                },
+                {
+                    label: 'Non-gentrified tracts',
+                    data: [
+                        data.not_gentrified.pct_white_alone_change,
+                        data.not_gentrified.pct_black_alone_change,
+                        data.not_gentrified.pct_hispanic_change,
+                        data.not_gentrified.pct_asian_change
+                    ],
+                    backgroundColor: GRAY,
+                    borderRadius: 4,
+                    barPercentage: 0.7
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ppTooltip } }
+            },
+            scales: {
+                x: xAxis(),
+                y: ppYAxis('Percentage-point change')
+            }
+        }
+    });
+}
+
+function createIncomeChart(data) {
+    new Chart(document.getElementById('incomeChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Year 2000', 'Year 2017'],
+            datasets: [
+                {
+                    label: 'Gentrified',
+                    data: [data.gentrified.median_income_00, data.gentrified.median_income_17],
+                    backgroundColor: BLUE,
+                    borderRadius: 4,
+                    barPercentage: 0.65
+                },
+                {
+                    label: 'Not gentrified',
+                    data: [data.not_gentrified.median_income_00, data.not_gentrified.median_income_17],
+                    backgroundColor: GRAY,
+                    borderRadius: 4,
+                    barPercentage: 0.65
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ctx.dataset.label + ': $' + ctx.raw.toLocaleString()
+                    }
+                }
+            },
+            scales: {
+                x: xAxis(),
+                y: dollarYAxis()
+            }
+        }
+    });
+}
+
+function createHomeValueChart(data) {
+    new Chart(document.getElementById('homeChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Year 2000', 'Year 2017'],
+            datasets: [
+                {
+                    label: 'Gentrified',
+                    data: [data.gentrified.median_home_value_00, data.gentrified.median_home_value_17],
+                    backgroundColor: BLUE,
+                    borderRadius: 4,
+                    barPercentage: 0.65
+                },
+                {
+                    label: 'Not gentrified',
+                    data: [data.not_gentrified.median_home_value_00, data.not_gentrified.median_home_value_17],
+                    backgroundColor: GRAY,
+                    borderRadius: 4,
+                    barPercentage: 0.65
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ctx.dataset.label + ': $' + ctx.raw.toLocaleString()
+                    }
+                }
+            },
+            scales: {
+                x: xAxis(),
+                y: dollarYAxis()
+            }
+        }
+    });
+}
+
+function createEducationChart(data) {
+    new Chart(document.getElementById('edChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Gentrified tracts', 'Non-gentrified tracts'],
+            datasets: [
+                {
+                    data: [
+                        data.gentrified.educational_attainment_change,
+                        data.not_gentrified.educational_attainment_change
+                    ],
+                    backgroundColor: [BLUE, GRAY],
+                    borderRadius: 4,
+                    barPercentage: 0.45
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => '+' + ctx.raw.toFixed(1) + ' pp change'
+                    }
+                }
+            },
+            scales: {
+                x: xAxis(),
+                y: {
+                    min: 0,
+                    title: {
+                        display: true,
+                        text: 'Percentage-point increase',
+                        font: { size: 11 },
+                        color: TICK_COLOR
+                    },
+                    ticks: {
+                        callback: v => '+' + v + ' pp',
+                        font: TICK_FONT,
+                        color: TICK_COLOR
+                    },
+                    grid: { color: GRID_COLOR }
+                }
+            }
+        }
+    });
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+
+function init() {
+    fetch('./data/gentrification.csv')
+        .then(res => res.text())
+        .then(text => {
+            const rows = parseCSV(text);
+
+            const gentrifiedRows    = rows.filter(r => r.gentrified === 'True');
+            const notGentrifiedRows = rows.filter(r => r.gentrified === 'False');
+
+            const data = {
+                gentrified:     summarise(gentrifiedRows),
+                not_gentrified: summarise(notGentrifiedRows)
+            };
+
+            createRaceChart(data);
+            createIncomeChart(data);
+            createHomeValueChart(data);
+            createEducationChart(data);
+        })
+        .catch(error => {
+            console.error('Error loading gentrification CSV:', error);
+        });
+}
+
+window.addEventListener('load', init);
